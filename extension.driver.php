@@ -2,7 +2,6 @@
 
 	class extension_stopforumspam extends Extension{
 		
-		private	$connectionurl =	'http://www.stopforumspam.com/api?f=xmldom';
 		public	$username = 'username';
 		public	$email = 'email';
 		
@@ -88,25 +87,32 @@
 			
 			$mapping = $_POST['fields'];
 			$check = array(
-						'username' => $mapping[$username],
-						'email' => $mapping[$email],
+						'username' => $mapping[$this->username],
+						'email' => $mapping[$this->email],
+						'ip' => $_SERVER['REMOTE_ADDR'],
 			);
-			$check['ipaddress'] = $_SERVER['REMOTE_ADDR'];
 			$mapping = null;
-			
-			$result = $this->__objectsIntoArray($this->__stopforumspamConnect($check));
-			
+			$result = $this->stopforumspamConnect($check);
+			//var_dump($result);die;
+			$text = '';
 			foreach($result as $key => $value){
 				if($key == 'success') continue;
 				if($value['appears']){
-					$context['messages'][] = array('stopforumspam', 0, $key . ' failed as spam');
+					$value = false;
 				}else{
-					$context['messages'][] = array('stopforumspam', 1, $key . ' passed spam check');
+					$value = true;
+				}
+				if($text != ''){
+					$text = $text.' and '.$key;
+				}else{
+					$text = $key;
 				}
 			}
+			$context['messages'][] = array('stopforumspam', $value, (!$value ? $text . ' failed as spam' : NULL));
+			//var_dump($context['messages']);die;
 		}
 		
-		private function __stopforumspamConnect($data)
+		public function stopforumspamConnect($data)
 		{
 			if(!is_array($data)) return;
 			
@@ -115,20 +121,17 @@
 			foreach($data as $key => $value){
 				if($value) $urloptions .= '&' . $key . '=' . $value;
 			}
-			
+			$url = 'http://www.stopforumspam.com/api?f=xmldom' . $urloptions;
 			$ch = curl_init();
-
-			curl_setopt($ch, CURLOPT_URL, $this->connectionurl . $urloptions);
+			curl_setopt($ch, CURLOPT_URL, $url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-			$ret = curl_exec($ch);
-
+			$xml = curl_exec($ch);
 			curl_close($ch);
-			
-			return $ret;
+			$ret = simplexml_load_string($xml);
+			return $this->objectsIntoArray($ret);
 		}
 		
-		private function __objectsIntoArray($data, $skipind = array())
+		public function objectsIntoArray($data, $skipind = array())
 		{
 			$array = array();
 			if(is_object($data)){
@@ -137,7 +140,7 @@
 			if(is_array($data)){
 				foreach($data as $key => $value){
 					if (is_object($value) || is_array($value)) {
-						$value = $this->__objectsIntoArray($value, $skipind);
+						$value = $this->objectsIntoArray($value, $skipind);
 					}
 					if (in_array($key, $skipind)) {
 						continue;
