@@ -1,8 +1,7 @@
-
 Stop Forum Spam
 ------------------------------------
 
-Version: 1.0
+Version: 1.1
 Author: John Porter (http://designermonkey.co.uk)
 Date: 2011-01-09
 Requirements: Symphony 2.x
@@ -14,7 +13,7 @@ Requirements: Symphony 2.x
 
 2. Enable it at System > Extensions.
 
-3. Add the "Akismet Spam Filtering" filter rule to your Event via Blueprints > Events
+3. Add the "Stop Forum Spam" filter rule to your Event via Blueprints > Events
 
 4. Save the Event.
 
@@ -22,5 +21,7 @@ Requirements: Symphony 2.x
 
 
 [CHANGELOG]
+
+1.1 - Introduction of a 3 second timer to stop quick multiple request spamming. Introduction of a hidden field option to expect an empty value. Thanks to [Geil Berkers (@kanduvisla)](http://www.gielberkers.com).
 
 1.0 - Initial Release
